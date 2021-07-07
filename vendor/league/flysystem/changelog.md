@@ -1,5 +1,64 @@
 # Changelog
 
+## 1.0.47 - 2018-09-14
+
+* Specify mimetype for .epub files
+
+## 1.0.46 - 2018-08-22
+
+* Return failure when copying a stream does not work instead of relying only on fclose.
+
+## 1.0.45 - 2018-05-07
+
+* Fixed a regression in path-derived metadata fetching.
+
+## 1.0.44 - 2018-04-06
+
+* Added missing file presence checks on `Filesystem::setVisibility` and `Filesystem::getSize`.
+* The `Handler` types are now deprecated and will be removed in 2.0.0
+* The `FilesystemInterface::get` method is now deprecated and will be removed in 2.0.0
+
+## 1.0.43 - 2018-03-01
+
+* Remove /docs from composer artifact.
+
+## 1.0.42 - 2018-01-27
+
+* Fixed FTP manual recursion.
+* Various code style fixes.
+
+## 1.0.41 - 2017-08-06
+
+### Fixed
+
+* Response array check mistake was corrected.
+
+### Altered
+
+* Removed support for HHVM.
+
+## 1.0.40 - 2017-04-28
+
+### Improved
+
+* Made it possible to indicate an adapter can ovewrite files using the write functions rather than the update ones.
+
+## 1.0.39 - 2017-04-25
+
+### Fixed
+
+* Some FTP servers return the `total` of 0 when a file doesn't exist instead of saying it doesn't exist.
+
+## 1.0.38 - 2017-04-22
+
+### Fixed
+
+* Pure-FTPd now escapes the first call to rawlist too.
+
+### Improved
+
+* You can now optionally put the FTP adapter in `utf8`-mode by setting the `utf8` setting to `true`.
+
 ## 1.0.37 - 2017-03-22
 
 ### Fixed
@@ -18,7 +77,7 @@
 
 ## 1.0.35 - 2017-02-09
 
-### Fixed 
+### Fixed
 
 * Creating a directory in FTP checked whether a directory already existed, the check was not strict enough.
 
@@ -186,7 +245,7 @@
 
 ### Fixed
 
-* [Filesystem::listContents] This function now uses DIRECTORY_SEPARATOR when the local adapter is used. 
+* [Filesystem::listContents] This function now uses DIRECTORY_SEPARATOR when the local adapter is used.
 
 ## 1.0.8 - 2015-07-12
 

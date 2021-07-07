@@ -4,6 +4,7 @@ namespace League\Flysystem\Adapter;
 
 use ErrorException;
 use League\Flysystem\Config;
+use PHPUnit\Framework\TestCase;
 
 function ftp_systype($connection)
 {
@@ -38,20 +39,12 @@ function ftp_ssl_connect($host)
 
 function ftp_delete($conn, $path)
 {
-    if (strpos($path, 'rm.fail.txt')) {
-        return false;
-    }
-
-    return true;
+    return ! strpos($path, 'rm.fail.txt');
 }
 
 function ftp_rmdir($connection, $dirname)
 {
-    if (strpos($dirname, 'rmdir.fail') !== false) {
-        return false;
-    }
-
-    return true;
+    return strpos($dirname, 'rmdir.fail') === false;
 }
 
 function ftp_connect($host)
@@ -61,11 +54,7 @@ function ftp_connect($host)
 
 function ftp_pasv($connection)
 {
-    if ($connection === 'pasv.fail') {
-        return false;
-    }
-
-    return true;
+    return $connection !== 'pasv.fail';
 }
 
 function ftp_rename()
@@ -107,15 +96,11 @@ function ftp_chdir($connection, $directory)
         return false;
     }
 
-    if (in_array($directory, ['file1.txt', 'file2.txt', 'file3.txt', 'file4.txt', 'dir1', 'file1.with-total-line.txt', 'file1.with-invalid-line.txt'])) {
+    if (in_array($directory, ['rawlist-total-0.txt', 'file1.txt', 'file2.txt', 'file3.txt', 'file4.txt', 'dir1', 'file1.with-total-line.txt', 'file1.with-invalid-line.txt'])) {
         return false;
     }
 
-    if ($directory === '0') {
-        return false;
-    }
-
-    return true;
+    return $directory !== '0';
 }
 
 function ftp_pwd($connection)
@@ -125,6 +110,14 @@ function ftp_pwd($connection)
 
 function ftp_raw($connection, $command)
 {
+    if ($connection === 'utf8.fail') {
+        return [0 => '421 Service not available, closing control connection'];
+    }
+
+	if ($command === 'OPTS UTF8 ON') {
+        return [0 => '200 UTF8 set to on'];
+    }
+
     if ($command === 'STAT syno.not.found') {
         return [0 => '211- status of syno.not.found:', 1 => 'ftpd: assd: No such file or directory.' ,2 => '211 End of status'];
     }
@@ -148,14 +141,18 @@ function ftp_rawlist($connection, $directory)
 {
     $directory = str_replace("-A ", "", $directory);
 
-    if ($directory === '/') {
-        if (getenv('FTP_CLOSE_THROW') === 'DISCONNECT_CATCH') {
-            throw new ErrorException('ftp_rawlist');
-        }
+    if (getenv('FTP_CLOSE_THROW') === 'DISCONNECT_CATCH') {
+        throw new ErrorException('ftp_rawlist');
+    }
 
-        if (getenv('FTP_CLOSE_THROW') === 'DISCONNECT_RETHROW') {
-            throw new ErrorException('does not contain the correct message');
-        }
+    if (getenv('FTP_CLOSE_THROW') === 'DISCONNECT_RETHROW') {
+        throw new ErrorException('does not contain the correct message');
+    }
+
+    if (strpos($directory, 'recurse.manually/recurse.folder') !== false) {
+        return [
+            '-rw-r--r--   1 ftp      ftp           409 Aug 19 09:01 file1.txt',
+        ];
     }
 
     if (strpos($directory, 'recurse.manually') !== false) {
@@ -165,9 +162,7 @@ function ftp_rawlist($connection, $directory)
     }
 
     if (strpos($directory, 'recurse.folder') !== false) {
-        return [
-            '-rw-r--r--   1 ftp      ftp           409 Aug 19 09:01 file1.txt',
-        ];
+        return false;
     }
 
     if (strpos($directory, 'fail.rawlist') !== false) {
@@ -248,8 +243,14 @@ function ftp_rawlist($connection, $directory)
 
     if (strpos($directory, 'file1.with-total-line.txt') !== false) {
         return [
-            'total 0',
+            'total 1',
             '-rw-r--r--   1 ftp      ftp           409 Aug 19 09:01 file1.txt',
+        ];
+    }
+
+    if (strpos($directory, 'rawlist-total-0.txt') !== false) {
+        return [
+            'total 0',
         ];
     }
 
@@ -258,6 +259,21 @@ function ftp_rawlist($connection, $directory)
             'invalid line',
             '-rw-r--r--   1 ftp      ftp           409 Aug 19 09:01 file1.txt',
         ];
+    }
+
+    if (strpos($directory, 'some.nested/rmdir.fail') !== false || strpos($directory, 'somewhere/cgi-bin') !== false) {
+        return [
+            'drwxr-xr-x   2 ftp      ftp          4096 Oct 13  2012 .',
+            'drwxr-xr-x   4 ftp      ftp          4096 Nov 24 13:58 ..',
+        ];
+    }
+
+    if (strpos($directory, 'some.nested') !== false) {
+        return ['drwxr-xr-x   1 ftp      ftp           409 Aug 19 09:01 rmdir.fail'];
+    }
+
+    if (strpos($directory, 'somewhere/folder') !== false) {
+        return ['-rw-r--r--   1 ftp      ftp             0 Nov 24 13:59 dummy.txt'];
     }
 
     return [
@@ -308,20 +324,12 @@ function ftp_mdtm($connection, $path)
 
 function ftp_mkdir($connection, $dirname)
 {
-    if (strpos($dirname, 'mkdir.fail') !== false) {
-        return false;
-    }
-
-    return true;
+    return strpos($dirname, 'mkdir.fail') === false;
 }
 
 function ftp_fput($connection, $path)
 {
-    if (strpos($path, 'write.fail') !== false) {
-        return false;
-    }
-
-    return true;
+    return strpos($path, 'write.fail') === false;
 }
 
 function ftp_fget($connection, $resource, $path)
@@ -343,11 +351,7 @@ function ftp_nlist($connection, $directory)
 
 function ftp_chmod($connection, $mode, $path)
 {
-    if (strpos($path, 'chmod.fail') !== false) {
-        return false;
-    }
-
-    return true;
+    return strpos($path, 'chmod.fail') === false;
 }
 
 function ftp_set_option($connection, $option, $value)
@@ -357,8 +361,10 @@ function ftp_set_option($connection, $option, $value)
     return true;
 }
 
-class FtpTests extends \PHPUnit_Framework_TestCase
+class FtpTests extends TestCase
 {
+    use \PHPUnitHacks;
+
     protected $options = [
         'host' => 'example.org',
         'port' => 40,
@@ -414,6 +420,8 @@ class FtpTests extends \PHPUnit_Framework_TestCase
         $adapter->setRecurseManually(true);
         $result = $adapter->listContents('recurse.manually', true);
         $this->assertCount(2, $result);
+        $this->assertEquals('recurse.manually/recurse.folder', $result[0]['path']);
+        $this->assertEquals('recurse.manually/recurse.folder/file1.txt', $result[1]['path']);
     }
 
     /**
@@ -435,7 +443,7 @@ class FtpTests extends \PHPUnit_Framework_TestCase
     {
         putenv('FTP_CLOSE_THROW=DISCONNECT_RETHROW');
 
-        $this->setExpectedException('ErrorException');
+        $this->expectException('ErrorException');
         $adapter = new Ftp(array_merge($this->options, ['host' => 'disconnect.check']));
         $adapter->connect();
         $adapter->isConnected();
@@ -489,6 +497,15 @@ class FtpTests extends \PHPUnit_Framework_TestCase
         $this->assertInternalType('array', $metadata);
         $this->assertEquals('file', $metadata['type']);
         $this->assertEquals('file1.txt', $metadata['path']);
+    }
+
+    /**
+     * @depends testInstantiable
+     */
+    public function testHasWithTotalZero()
+    {
+        $adapter = new Ftp($this->options);
+        $this->assertFalse($adapter->getMetadata('rawlist-total-0.txt'));
     }
 
     /**
@@ -747,6 +764,27 @@ class FtpTests extends \PHPUnit_Framework_TestCase
         $adapter = new Ftp($this->options + ['systemType' => 'windows']);
         $metadata = $adapter->getMetadata('file1.with-invalid-line.txt');
         $this->assertEquals('file1.txt', $metadata['path']);
+    }
+
+    /**
+     * @depends testInstantiable
+     */
+    public function testItSetUtf8Mode()
+    {
+        $adapter = new Ftp($this->options + ['utf8' => true]);
+        $adapter->setUtf8(true);
+        $this->assertNull($adapter->connect());
+    }
+
+    /**
+     * @depends testInstantiable
+     * @expectedException \RuntimeException
+     */
+    public function testItThrowsAnExceptionWhenItCouldNotSetUtf8ModeForConnection()
+    {
+        $adapter = new Ftp(['host' => 'utf8.fail', 'utf8' => true]);
+        $adapter->setUtf8(true);
+        $adapter->connect();
     }
 
     /**

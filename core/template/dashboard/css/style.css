@@ -1,33 +1,35 @@
 .sonos_widget{
-	width: 220px;
 	height: 330px;
 	font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-	background-color: black;
 	overflow:hidden;
 	position: relative;
 	z-index: 1;
+	color: rgb(172, 172, 172);
+	
 }
+
+.sonos_widget .selected{
+	color : red !important;
+}
+
 .sonos_widget .uppart{
-	height: 257px;
-	width: 250px;
+	height: 233px;
 	z-index: 2;
 }
 .sonos_widget .downpart{
 	height: 70px;
-	width: 250px;
 	z-index: 2;
 }
 
 .sonos_widget .volumeDownpart{
 	height: 70px;
-	width: 250px;
 	z-index: 2;
 }
 .sonos_widget .cercle_downpart{
 	width: 52px;
 	height: 52px;
 	position: absolute;
-	margin : 6.5px 99px 6.5px;
+	margin : 1px 110px 6.5px;
 	border: 2px solid black;
 	border-radius:50%;
 	z-index: 3;
@@ -89,8 +91,8 @@
 	width: 20px;
 	height: 20px;
 	position: absolute;
-	margin-top: 16px;
-	left: 48px;
+	margin-top: 20px;
+	left: 60px;
 	cursor:pointer;
 	z-index: 4;
 	opacity: 0.6;
@@ -119,8 +121,8 @@
 	width: 20px;
 	height: 20px;
 	position: absolute;
-	margin-top: 12px;
-	left: 180px;
+	margin-top: 18px;
+	right: 50px;
 	cursor:pointer;
 	z-index: 4;
 	opacity: 0.6;
@@ -150,15 +152,15 @@
 }
 .sonos_widget .leftRafter{
 	width: 15px;
-	height: 40px;	
-	position: absolute;	
+	height: 40px;
+	position: absolute;
 	top: 143.5px;
-	left: 5px;	
-	cursor:pointer;	
+	left: 5px;
+	cursor:pointer;
 	-ms-transform: rotate(180deg);
 	-webkit-transform: rotate(180deg);
-	transform: rotate(180deg);	
-	z-index: 4;	
+	transform: rotate(180deg);
+	z-index: 4;
 	opacity: 0.1;
 }
 .sonos_widget .leftRafter:hover{
@@ -167,7 +169,7 @@
 .sonos_widget .leftpanel .leftRafter{
 	-ms-transform: rotate(0deg);
 	-webkit-transform: rotate(0deg);
-	transform: rotate(0deg);	
+	transform: rotate(0deg);
 }
 .sonos_widget .rightpanel{
 	width: 200px;
@@ -176,7 +178,7 @@
 	position: absolute;
 	z-index: 10;
 	right: -200px;
-	background-color: #4a89dc;
+	background-color: white;
 }
 .sonos_widget .leftpanel{
 	text-align: left;
@@ -186,12 +188,12 @@
 	position: absolute;
 	z-index: 10;
 	left: -200px;
-	background-color: #4a89dc;
+	background-color: white;
 }
 .sonos_widget .title_downpart{
 	text-align: center;
-	width: 220px;	
 	position: absolute;
+	width: 230px;
 	margin-left:15px;
 }
 .sonos_widget .title{
@@ -201,36 +203,35 @@
 	font-size:14px;
 }
 .sonos_widget .jaquette_sonos{
-	width: 250px;
 	height: 180px;
 }
 .sonos_widget .affiche_premiere_sonos{
 	width: 150px;
-	height: 150px;	
-	position: absolute;	
-	margin-left: -80px;
-	margin-top: 25px;	
-	z-index: 7;	
+	height: 150px;
+	position: absolute;
+	margin-left: -75px;
+	margin-top: 25px;
+	z-index: 7;
 	border-radius: 10%;
 }
 .sonos_widget .affiche_deuxieme_sonos{
 	width: 140px;
-	height: 140px;	
-	position: absolute;	
+	height: 140px;
+	position: absolute;
 	margin-left: -100px;
-	margin-top: 35px;	
-	z-index: 6;	
-	opacity: 0.22;	
+	margin-top: 35px;
+	z-index: 6;
+	opacity: 0.22;
 	border-radius: 10%;
 }
 .sonos_widget .affiche_troisieme_sonos{
 	width: 140px;
-	height: 140px;	
-	position: absolute;	
+	height: 140px;
+	position: absolute;
 	margin-left: -40px;
-	margin-top: 35px;	
-	z-index: 6;	
-	opacity: 0.22;	
+	margin-top: 35px;
+	z-index: 6;
+	opacity: 0.22;
 	border-radius: 10%;
 }
 .sonos_widget .shadow_fenetre_sonos{
@@ -263,7 +264,6 @@
 }
 .sonos_widget .volume_sonos_widget{
 	position: absolute;
-	width: 250px;
 	bottom: 25px;
 }
 .sonos_widget .bouton_sup_volume{
@@ -281,7 +281,7 @@
 	margin-top: 5px;
 	left: 5px;
 	cursor:pointer;
-	text-decoration: none; 
+	text-decoration: none;
 	cursor:default;
 	z-index: 4;
 	opacity: 0.3;

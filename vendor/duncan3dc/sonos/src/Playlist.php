@@ -4,26 +4,30 @@ namespace duncan3dc\Sonos;
 
 use duncan3dc\DomParser\XmlElement;
 use duncan3dc\DomParser\XmlParser;
-use duncan3dc\Sonos\Tracks\UriInterface;
+use duncan3dc\Sonos\Exceptions\SonosException;
+use duncan3dc\Sonos\Interfaces\ControllerInterface;
+use duncan3dc\Sonos\Interfaces\PlaylistInterface;
+use duncan3dc\Sonos\Interfaces\QueueInterface;
+use duncan3dc\Sonos\Interfaces\UriInterface;
 
 /**
- * Provides an interface for managing Sonos playlists on the current network.
- */
-class Playlist extends Queue {
+* Provides an interface for managing Sonos playlists on the current network.
+*/
+final class Playlist extends Queue implements PlaylistInterface {
 	/**
-	 * @var string|null $name The name of the playlist.
-	 */
-	protected $name;
-
+	* @var string|null $name The name of the playlist.
+	*/
+	private $name;
+	
 	/**
-	 * Create an instance of the Playlist class.
-	 *
-	 * @param string|XmlElement $param The id of the playlist, or an xml element with the relevant attributes
-	 * @param Controller $controller A controller instance on the playlist's network
-	 */
-	public function __construct($param, Controller $controller) {
+	* Create an instance of the Playlist class.
+	*
+	* @param string|XmlElement $param The id of the playlist, or an xml element with the relevant attributes
+	* @param ControllerInterface $controller A controller instance on the playlist's network
+	*/
+	public function __construct($param, ControllerInterface $controller) {
 		parent::__construct($controller);
-
+		
 		if (is_string($param)) {
 			$this->id = $param;
 		} else {
@@ -31,27 +35,22 @@ class Playlist extends Queue {
 			$this->name = $param->getTag("title")->nodeValue;
 		}
 	}
-
+	
 	/**
-	 * Get the id of the playlist.
-	 *
-	 * @return string
-	 */
-	public function getId() {
+	* Get the id of the playlist.
+	*
+	* @return string
+	*/
+	public function getId(): string {
 		return $this->id;
 	}
-
-	public function getUri() {
-		$id = substr($this->id, 3);
-		return "file:///jffs/settings/savedqueues.rsq#{$id}";
-	}
-
+	
 	/**
-	 * Get the name of the playlist.
-	 *
-	 * @return string
-	 */
-	public function getName() {
+	* Get the name of the playlist.
+	*
+	* @return string
+	*/
+	public function getName(): string {
 		if ($this->name === null) {
 			$data = $this->browse("Metadata");
 			$xml = new XmlParser($data["Result"]);
@@ -59,29 +58,31 @@ class Playlist extends Queue {
 		}
 		return $this->name;
 	}
-
+	
 	/**
-	 * Calculate the position number to be used to add a track to the end of the playlist.
-	 *
-	 * @return int
-	 */
-	protected function getNextPosition() {
+	* Calculate the position number to be used to add a track to the end of the playlist.
+	*
+	* @return int
+	*/
+	protected function getNextPosition(): int {
 		return parent::getNextPosition() - 1;
 	}
-
+	
 	/**
-	 * Add a uri to the playlist.
-	 *
-	 * @param UriInterface $track The track to add
-	 * @param int $position The position to insert the track in the playlist (zero-based), by default the track will be added to the end of the playlist
-	 *
-	 * @return bool
-	 */
-	protected function addUris(array $tracks, $position = null) {
+	* Add tracks to the playlist.
+	*
+	* If no $position is passed the track will be added to the end of the playlist
+	*
+	* @param UriInterface[] $tracks The tracks to add
+	* @param int $position The position to insert the track in the playlist (zero-based)
+	*
+	* @return void
+	*/
+	protected function addUris(array $tracks, int $position = null) {
 		if ($position === null) {
 			$position = $this->getNextPosition();
 		}
-
+		
 		foreach ($tracks as $track) {
 			$data = $this->soap("AVTransport", "AddURIToSavedQueue", [
 				"UpdateID" => $this->updateId,
@@ -90,76 +91,75 @@ class Playlist extends Queue {
 				"AddAtIndex" => $position,
 			]);
 			$this->updateId = $data["NewUpdateID"];
-
+			
 			$position++;
-
-			if ($data["NumTracksAdded"] != 1) {
-				return false;
-			}
 		}
-
-		return true;
 	}
-
+	
 	/**
-	 * Remove tracks from the playlist.
-	 *
-	 * @param int[] $positions The zero-based positions of the tracks to remove
-	 *
-	 * @return bool
-	 */
-	public function removeTracks(array $positions) {
+	* Remove tracks from the playlist.
+	*
+	* @param int[] $positions The zero-based positions of the tracks to remove
+	*
+	* @return bool
+	*/
+	public function removeTracks(array $positions): bool{
 		$data = $this->soap("AVTransport", "ReorderTracksInSavedQueue", [
 			"UpdateID" => $this->getUpdateID(),
 			"TrackList" => implode(",", $positions),
 			"NewPositionList" => "",
 		]);
 		$this->updateId = $data["NewUpdateID"];
-
+		
 		return ($data["QueueLengthChange"] == (count($positions) * -1));
 	}
-
+	
 	/**
-	 * Move a track from one position in the playlist to another.
-	 *
-	 * @param int $from The current position of the track in the playlist (zero-based)
-	 * @param int $to The desired position in the playlist (zero-based)
-	 *
-	 * @return static
-	 */
-	public function moveTrack($from, $to) {
+	* Move a track from one position in the playlist to another.
+	*
+	* @param int $from The current position of the track in the playlist (zero-based)
+	* @param int $to The desired position in the playlist (zero-based)
+	*
+	* @return $this
+	*/
+	public function moveTrack(int $from, int $to): PlaylistInterface{
 		$data = $this->soap("AVTransport", "ReorderTracksInSavedQueue", [
 			"UpdateID" => $this->getUpdateID(),
 			"TrackList" => (string) $from,
 			"NewPositionList" => (string) $to,
 		]);
 		$this->updateId = $data["NewUpdateID"];
-
+		
 		return $this;
 	}
-
+	
 	/**
-	 * Remove all tracks from the queue.
-	 *
-	 * @return static
-	 */
-	public function clear() {
+	* Remove all tracks from the queue.
+	*
+	* @return $this
+	*/
+	public function clear(): QueueInterface{
 		$positions = [];
 		$max = $this->count();
 		for ($i = 0; $i < $max; $i++) {
 			$positions[] = $i;
 		}
 		$this->removeTracks($positions);
-
+		
 		return $this;
 	}
-
+	
 	/**
-	 * Delete this playlist from the network.
-	 *
-	 * @return void
-	 */
+	* Delete this playlist from the network.
+	*
+	* @return void
+	*/
 	public function delete() {
 		$this->soap("ContentDirectory", "DestroyObject");
+	}
+	
+	public function getUri() {
+		$id = substr($this->id, 3);
+		return "file:///jffs/settings/savedqueues.rsq#{$id}";
 	}
 }

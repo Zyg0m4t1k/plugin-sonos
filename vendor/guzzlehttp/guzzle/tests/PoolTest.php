@@ -10,8 +10,9 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Promise\Promise;
 use Psr\Http\Message\RequestInterface;
+use PHPUnit\Framework\TestCase;
 
-class PoolTest extends \PHPUnit_Framework_TestCase
+class PoolTest extends TestCase
 {
     /**
      * @expectedException \InvalidArgumentException
@@ -33,6 +34,9 @@ class PoolTest extends \PHPUnit_Framework_TestCase
         $p->promise()->wait();
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testSendsAndRealizesFuture()
     {
         $c = $this->getClient();
@@ -40,6 +44,9 @@ class PoolTest extends \PHPUnit_Framework_TestCase
         $p->promise()->wait();
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testExecutesPendingWhenWaiting()
     {
         $r1 = new Promise(function () use (&$r1) { $r1->resolve(new Response()); });

@@ -2,7 +2,10 @@
 
 namespace duncan3dc\SonosTests;
 
-use duncan3dc\Sonos\ControllerState;
+use duncan3dc\Sonos\Controller;
+use duncan3dc\Sonos\Exceptions\SoapException;
+use duncan3dc\Sonos\Interfaces\ControllerStateInterface;
+use duncan3dc\Sonos\Utils\Time;
 use Mockery;
 
 class ControllerTest extends MockTest
@@ -23,13 +26,9 @@ class ControllerTest extends MockTest
 
     public function testPlayEmptyQueue()
     {
-        if (defined("HHVM_VERSION")) {
-            $this->markTestSkipped("Unable to mock Exceptions on HHVM");
-        }
-
         $device = $this->getDevice();
         $controller = $this->getController($device);
-        $exception = Mockery::mock("duncan3dc\Sonos\Exceptions\SoapException");
+        $exception = Mockery::mock(SoapException::class);
 
         $device->shouldReceive("soap")->once()->with("AVTransport", "Play", [
             "Speed" =>  1,
@@ -43,7 +42,7 @@ class ControllerTest extends MockTest
             "ObjectID"          =>  "Q:0",
         ]);
 
-        $this->setExpectedException("\BadMethodCallException");
+        $this->expectException(\BadMethodCallException::class);
         $controller->play();
     }
 
@@ -73,7 +72,7 @@ class ControllerTest extends MockTest
             "Target"    =>  "00:00:55",
         ]);
 
-        $this->assertSame($controller, $controller->seek(55));
+        $this->assertSame($controller, $controller->seek(Time::inSeconds(55)));
     }
 
 
@@ -87,7 +86,7 @@ class ControllerTest extends MockTest
             "Target"    =>  "00:02:02",
         ]);
 
-        $this->assertSame($controller, $controller->seek(122));
+        $this->assertSame($controller, $controller->seek(Time::inSeconds(122)));
     }
 
 
@@ -101,7 +100,7 @@ class ControllerTest extends MockTest
             "Target"    =>  "01:05:00",
         ]);
 
-        $this->assertSame($controller, $controller->seek(3900));
+        $this->assertSame($controller, $controller->seek(Time::parse("1:5:0")));
     }
 
 
@@ -115,7 +114,7 @@ class ControllerTest extends MockTest
             "Target"    =>  "00:00:00",
         ]);
 
-        $this->assertSame($controller, $controller->seek(0));
+        $this->assertSame($controller, $controller->seek(Time::start()));
     }
 
 
@@ -124,18 +123,24 @@ class ControllerTest extends MockTest
         $device = $this->getDevice();
         $controller = $this->getController($device);
 
-        $state = Mockery::mock(ControllerState::class);
-        $state->speakers = [];
-        $state->tracks = [];
+        $state = Mockery::mock(ControllerStateInterface::class);
+        $state->shouldReceive("getState")->once()->with()->andReturn(Controller::STATE_STOPPED);
+        $state->shouldReceive("getRepeat")->once()->with()->andReturn(false);
+        $state->shouldReceive("getShuffle")->once()->with()->andReturn(false);
+        $state->shouldReceive("getCrossfade")->once()->with()->andReturn(false);
+        $state->shouldReceive("getSpeakers")->once()->with()->andReturn([]);
+        $state->shouldReceive("getTracks")->once()->with()->andReturn([]);
+        $state->shouldReceive("getStream")->once()->with()->andReturn(null);
 
         $device->shouldReceive("soap")->once()->with("AVTransport", "RemoveAllTracksFromQueue", ["ObjectID" => "Q:0"]);
-        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", []);
+        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", [])->andReturn(["PlayMode" => "TEST"]);
         $device->shouldReceive("soap")->once()->with("AVTransport", "SetCrossfadeMode", ["CrossfadeMode" => false]);
 
-        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportInfo", []);
-        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", []);
+        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportInfo", [])->andReturn(["CurrentTransportState" => "TEST"]);
+        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", [])->andReturn(["PlayMode" => "TEST"]);
 
-        $controller->restoreState($state);
+        $result = $controller->restoreState($state);
+        $this->assertSame($controller, $result);
     }
 
 
@@ -144,13 +149,19 @@ class ControllerTest extends MockTest
         $device = $this->getDevice();
         $controller = $this->getController($device);
 
-        $state = Mockery::mock(ControllerState::class);
-        $state->speakers = [];
-        $state->tracks = ["track"];
-        $state->position = "05:03:01";
+        $state = Mockery::mock(ControllerStateInterface::class);
+        $state->shouldReceive("getState")->once()->with()->andReturn(Controller::STATE_STOPPED);
+        $state->shouldReceive("getTrack")->once()->with()->andReturn(0);
+        $state->shouldReceive("getPosition")->once()->with()->andReturn(Time::parse("05:03:01"));
+        $state->shouldReceive("getRepeat")->once()->with()->andReturn(false);
+        $state->shouldReceive("getShuffle")->once()->with()->andReturn(false);
+        $state->shouldReceive("getCrossfade")->once()->with()->andReturn(false);
+        $state->shouldReceive("getSpeakers")->once()->with()->andReturn([]);
+        $state->shouldReceive("getTracks")->once()->with()->andReturn(["track"]);
+        $state->shouldReceive("getStream")->once()->with()->andReturn(null);
 
         $device->shouldReceive("soap")->once()->with("AVTransport", "RemoveAllTracksFromQueue", ["ObjectID" => "Q:0"]);
-        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", []);
+        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", [])->andReturn(["PlayMode" => "TEST"]);
         $device->shouldReceive("soap")->once()->with("AVTransport", "SetCrossfadeMode", ["CrossfadeMode" => false]);
 
         $device->shouldReceive("soap")->once()->with("ContentDirectory", "Browse", [
@@ -161,7 +172,7 @@ class ControllerTest extends MockTest
             "SortCriteria"      =>  "",
             "ObjectID"          =>  "Q:0",
         ]);
-        $device->shouldReceive("soap")->once()->with("AVTransport", "AddMultipleURIsToQueue", Mockery::any());
+        $device->shouldReceive("soap")->once()->with("AVTransport", "AddMultipleURIsToQueue", Mockery::any())->andReturn(["NumTracksAdded" => 1, "NewUpdateID" => 86]);
         $device->shouldReceive("soap")->once()->with("AVTransport", "Seek", [
             "Unit"      =>  "TRACK_NR",
             "Target"    =>  1,
@@ -171,10 +182,11 @@ class ControllerTest extends MockTest
             "Target"    =>  "05:03:01",
         ]);
 
-        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportInfo", []);
-        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", []);
+        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportInfo", [])->andReturn(["CurrentTransportState" => "TEST"]);
+        $device->shouldReceive("soap")->once()->with("AVTransport", "GetTransportSettings", [])->andReturn(["PlayMode" => "TEST"]);
 
-        $controller->restoreState($state);
+        $result = $controller->restoreState($state);
+        $this->assertSame($controller, $result);
     }
 
 
@@ -194,14 +206,13 @@ class ControllerTest extends MockTest
         $state = $controller->getStateDetails();
 
         $this->assertSame("x-file-cifs://LEMIEUX/sonos/the%20used/imaginary%20enemy/01-Revolution.mp3", $state->getUri());
-        $this->assertSame("revolution", $state->title);
-        $this->assertSame("the used", $state->artist);
-        $this->assertSame("imaginary enemy", $state->album);
-        $this->assertSame(1, $state->trackNumber);
-        $this->assertSame(0, $state->queueNumber);
-        $this->assertSame("0:04:04", $state->duration);
-        $this->assertSame("0:00:15", $state->position);
-        $this->assertNull($state->stream);
+        $this->assertSame("revolution", $state->getTitle());
+        $this->assertSame("the used", $state->getArtist());
+        $this->assertSame("imaginary enemy", $state->getAlbum());
+        $this->assertSame(0, $state->getNumber());
+        $this->assertSame("00:04:04", $state->getDuration()->asString());
+        $this->assertSame("00:00:15", $state->getPosition()->asString());
+        $this->assertNull($state->getStream());
     }
 
 
@@ -226,11 +237,11 @@ class ControllerTest extends MockTest
         $state = $controller->getStateDetails();
 
         $this->assertSame("x-rincon-mp3radio://tx.sharp-stream.com/http_live.php?i=teamrock.mp3", $state->getUri());
-        $this->assertSame("Hit Or Miss", $state->title);
-        $this->assertSame("New Found Glory", $state->artist);
-        $this->assertSame("0:00:00", $state->duration);
-        $this->assertSame("0:00:02", $state->position);
-        $this->assertSame("TeamRock Radio", $state->stream);
+        $this->assertSame("Hit Or Miss", $state->getTitle());
+        $this->assertSame("New Found Glory", $state->getArtist());
+        $this->assertSame("00:00:00", $state->getDuration()->asString());
+        $this->assertSame("00:00:02", $state->getPosition()->asString());
+        $this->assertSame("TeamRock Radio", $state->getStream()->getTitle());
     }
 
 
@@ -250,7 +261,7 @@ class ControllerTest extends MockTest
         $state = $controller->getStateDetails();
 
         $this->assertSame("x-rincon-stream:RINCON_B8E9372C898401400", $state->getUri());
-        $this->assertSame("Line-In", $state->stream);
+        $this->assertSame("Line-In", $state->getStream()->getTitle());
     }
 
 
@@ -270,7 +281,7 @@ class ControllerTest extends MockTest
         $state = $controller->getStateDetails();
 
         $this->assertSame("", $state->getUri());
-        $this->assertNull($state->stream);
+        $this->assertNull($state->getStream());
     }
 
 
@@ -300,13 +311,13 @@ class ControllerTest extends MockTest
     }
 
 
-    public function testIsStreamingLineIn()
+    public function testIsStreamingPlaybar()
     {
         $device = $this->getDevice();
         $controller = $this->getController($device);
 
         $device->shouldReceive("soap")->once()->with("AVTransport", "GetMediaInfo", [])->andReturn([
-            "CurrentURI"    =>  "x-rincon-stream:RINCON_5CAAFD0A251401400",
+            "CurrentURI"    =>  "x-sonos-htastream:RINCON_5CAAFD0A251401400:spdif",
         ]);
 
         $this->assertTrue($controller->isStreaming());

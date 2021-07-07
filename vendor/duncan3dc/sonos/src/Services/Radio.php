@@ -3,13 +3,15 @@
 namespace duncan3dc\Sonos\Services;
 
 use duncan3dc\DomParser\XmlParser;
-use duncan3dc\Sonos\Controller;
+use duncan3dc\Sonos\Exceptions\NotFoundException;
+use duncan3dc\Sonos\Interfaces\ControllerInterface;
+use duncan3dc\Sonos\Interfaces\Services\RadioInterface;
 use duncan3dc\Sonos\Tracks\Stream;
 
 /**
  * Handle radio streams using TuneIn.
  */
-class Radio
+final class Radio implements RadioInterface
 {
     /**
      * @var int The key for station types.
@@ -22,7 +24,7 @@ class Radio
     const SHOWS = 1;
 
     /**
-     * @var Controller $controller The Controller instance to send commands to.
+     * @var ControllerInterface $controller The Controller instance to send commands to.
      */
     protected $controller;
 
@@ -30,9 +32,9 @@ class Radio
     /**
      * Create a new instance.
      *
-     * @param Controller $controller A Controller instance to send commands to
+     * @param ControllerInterface $controller A Controller instance to send commands to
      */
-    public function __construct(Controller $controller)
+    public function __construct(ControllerInterface $controller)
     {
         $this->controller = $controller;
     }
@@ -45,7 +47,7 @@ class Radio
      *
      * @return Stream[]
      */
-    protected function getFavourites($type)
+    protected function getFavourites(int $type): array
     {
         $items = [];
 
@@ -75,7 +77,7 @@ class Radio
      *
      * @return Stream[]
      */
-    public function getFavouriteStations()
+    public function getFavouriteStations(): array
     {
         return $this->getFavourites(self::STATIONS);
     }
@@ -86,20 +88,20 @@ class Radio
      *
      * If no case-sensitive match is found it will return a case-insensitive match.
      *
-     * @param string The name of the station
+     * @param string $name The name of the station
      *
-     * @return Stream|null
+     * @return Stream
      */
-    public function getFavouriteStation($name)
+    public function getFavouriteStation(string $name): Stream
     {
         $roughMatch = false;
 
         $stations = $this->getFavouriteStations();
         foreach ($stations as $station) {
-            if ($station->getName() === $name) {
+            if ($station->getTitle() === $name) {
                 return $station;
             }
-            if (strtolower($station->getName()) === strtolower($name)) {
+            if (strtolower($station->getTitle()) === strtolower($name)) {
                 $roughMatch = $station;
             }
         }
@@ -107,6 +109,8 @@ class Radio
         if ($roughMatch) {
             return $roughMatch;
         }
+
+        throw new NotFoundException("Unable to find a radio station by the name '{$name}'");
     }
 
 
@@ -115,7 +119,7 @@ class Radio
      *
      * @return Stream[]
      */
-    public function getFavouriteShows()
+    public function getFavouriteShows(): array
     {
         return $this->getFavourites(self::SHOWS);
     }
@@ -126,20 +130,20 @@ class Radio
      *
      * If no case-sensitive match is found it will return a case-insensitive match.
      *
-     * @param string The name of the show
+     * @param string $name The name of the show
      *
-     * @return Stream|null
+     * @return Stream
      */
-    public function getFavouriteShow($name)
+    public function getFavouriteShow(string $name): Stream
     {
         $roughMatch = false;
 
         $shows = $this->getFavouriteShows();
         foreach ($shows as $show) {
-            if ($show->getName() === $name) {
+            if ($show->getTitle() === $name) {
                 return $show;
             }
-            if (strtolower($show->getName()) === strtolower($name)) {
+            if (strtolower($show->getTitle()) === strtolower($name)) {
                 $roughMatch = $show;
             }
         }
@@ -147,5 +151,7 @@ class Radio
         if ($roughMatch) {
             return $roughMatch;
         }
+
+        throw new NotFoundException("Unable to find a radio show by the name '{$name}'");
     }
 }

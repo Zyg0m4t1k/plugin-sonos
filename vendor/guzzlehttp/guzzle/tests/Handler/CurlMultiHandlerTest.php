@@ -5,8 +5,9 @@ use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Tests\Server;
+use PHPUnit\Framework\TestCase;
 
-class CurlMultiHandlerTest extends \PHPUnit_Framework_TestCase
+class CurlMultiHandlerTest extends TestCase
 {
     public function testSendsRequest()
     {
@@ -45,6 +46,10 @@ class CurlMultiHandlerTest extends \PHPUnit_Framework_TestCase
             $response->cancel();
             $responses[] = $response;
         }
+
+        foreach($responses as $r) {
+            $this->assertEquals('rejected', $response->getState());
+        }
     }
 
     public function testCannotCancelFinished()
@@ -55,6 +60,7 @@ class CurlMultiHandlerTest extends \PHPUnit_Framework_TestCase
         $response = $a(new Request('GET', Server::$url), []);
         $response->wait();
         $response->cancel();
+        $this->assertEquals('fulfilled', $response->getState());
     }
 
     public function testDelaysConcurrently()

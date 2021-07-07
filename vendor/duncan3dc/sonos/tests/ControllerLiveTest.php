@@ -3,6 +3,7 @@
 namespace duncan3dc\SonosTests;
 
 use duncan3dc\Sonos\Controller;
+use duncan3dc\Sonos\Interfaces\Utils\TimeInterface;
 use duncan3dc\Sonos\Queue;
 use duncan3dc\Sonos\Speaker;
 
@@ -14,7 +15,7 @@ class ControllerLiveTest extends LiveTest
         foreach ($this->network->getSpeakers() as $speaker) {
             if ($speaker->isCoordinator()) {
                 $controller = new Controller($speaker, $this->network);
-                $this->assertSame($speaker->ip, $controller->ip);
+                $this->assertSame($speaker->getIp(), $controller->getIp());
                 return;
             }
         }
@@ -25,7 +26,7 @@ class ControllerLiveTest extends LiveTest
 
     public function testConstructor2()
     {
-        $this->setExpectedException("InvalidArgumentException");
+        $this->expectException(\InvalidArgumentException::class);
 
         foreach ($this->network->getSpeakers() as $speaker) {
             if (!$speaker->isCoordinator()) {
@@ -64,14 +65,16 @@ class ControllerLiveTest extends LiveTest
 
     public function testGetStateDetails()
     {
-        $keys = ["title", "artist", "album", "trackNumber", "queueNumber", "duration", "position", "stream"];
+        $methods = ["getTitle", "getArtist", "getAlbum", "getNumber", "getDuration", "getPosition", "getStream"];
         $state = $this->network->getController()->getStateDetails();
-        foreach ($keys as $key) {
-            $this->assertObjectHasAttribute($key, $state);
-            if (in_array($key, ["trackNumber", "queueNumber"])) {
-                $this->assertInternalType("integer", $state->$key);
-            } elseif ($key !== "stream") {
-                $this->assertInternalType("string", $state->$key);
+        foreach ($methods as $method) {
+            $result = $state->$method();
+            if ($method === "getNumber") {
+                $this->assertInternalType("integer", $result);
+            } elseif (in_array($method, ["getDuration", "getPosition"], true)) {
+                $this->assertInstanceOf(TimeInterface::class, $result);
+            } elseif ($method !== "getStream") {
+                $this->assertInternalType("string", $result);
             }
         }
     }
@@ -80,18 +83,18 @@ class ControllerLiveTest extends LiveTest
     public function testNext()
     {
         $controller = $this->network->getController();
-        $number = $controller->getStateDetails()->queueNumber;
+        $number = $controller->getStateDetails()->getNumber();
         $controller->next();
-        $this->assertSame($controller->getStateDetails()->queueNumber, $number + 1);
+        $this->assertSame($controller->getStateDetails()->getNumber(), $number + 1);
     }
 
 
     public function testPrevious()
     {
         $controller = $this->network->getController();
-        $number = $controller->getStateDetails()->queueNumber;
+        $number = $controller->getStateDetails()->getNumber();
         $controller->previous();
-        $this->assertSame($controller->getStateDetails()->queueNumber, $number - 1);
+        $this->assertSame($controller->getStateDetails()->getNumber(), $number - 1);
     }
 
 

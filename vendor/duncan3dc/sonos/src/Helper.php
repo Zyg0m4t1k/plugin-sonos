@@ -6,6 +6,7 @@ use duncan3dc\DomParser\XmlWriter;
 
 /**
  * Provides helper functions for the classes.
+ * @internal
  */
 class Helper
 {
@@ -19,7 +20,7 @@ class Helper
      *
      * @return array Mode data containing the following boolean elements (shuffle, repeat)
      */
-    public static function getMode($mode)
+    public static function getMode(string $mode): array
     {
         $options = [
             "shuffle"   =>  false,
@@ -44,7 +45,7 @@ class Helper
      *
      * @return string
      */
-    public static function setMode(array $options)
+    public static function setMode(array $options): string
     {
         if ($options["shuffle"]) {
             if (!$options["repeat"]) {
@@ -67,11 +68,16 @@ class Helper
      * @param string $id The ID of the track
      * @param string $parent The ID of the parent
      * @param array $extra An xml array of extra attributes for this item
+     * @param string $service The Sonos service ID to use
      *
      * @return string
      */
-    public static function createMetaDataXml($id, $parent = "-1", array $extra = [], $service = null)
-    {
+    public static function createMetaDataXml(
+        string $id,
+        string $parent = "-1",
+        array $extra = [],
+        string $service = null
+    ): string {
         if ($service !== null) {
             $extra["desc"] = [
                 "_attributes"   =>  [

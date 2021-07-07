@@ -3,6 +3,7 @@
 namespace duncan3dc\SonosTests;
 
 use duncan3dc\DomParser\XmlParser;
+use duncan3dc\Sonos\Interfaces\ControllerInterface;
 use duncan3dc\Sonos\State;
 use duncan3dc\SonosTests\Tracks\TrackTest;
 use Mockery;
@@ -11,8 +12,8 @@ class StateTest extends TrackTest
 {
     public function setUp()
     {
-        $controller = Mockery::mock("duncan3dc\Sonos\Controller");
-        $controller->ip = "192.168.0.66";
+        $controller = Mockery::mock(ControllerInterface::class);
+        $controller->shouldReceive("getIp")->andReturn("192.168.0.66");
 
         $xml = new XmlParser($this->xml1);
         $this->track1 = State::createFromXml($xml->getTag("track"), $controller);
@@ -22,8 +23,15 @@ class StateTest extends TrackTest
     }
 
 
-    public function testTrackNumber()
+    /**
+     * Ignore these inherited tests as they are Track specific.
+     */
+    public function testItemId1()
     {
-        $this->assertSame(3, $this->track1->trackNumber);
+        $this->assertTrue(true);
+    }
+    public function testGetId2()
+    {
+        $this->assertTrue(true);
     }
 }

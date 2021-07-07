@@ -7,6 +7,7 @@ namespace Composer\Autoload;
 class ComposerStaticInitb131b39c3e439adf68e754ff7761fe23
 {
     public static $files = array (
+        '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
         'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
         'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
@@ -18,9 +19,11 @@ class ComposerStaticInitb131b39c3e439adf68e754ff7761fe23
             'duncan3dc\\Speaker\\Test\\' => 23,
             'duncan3dc\\Speaker\\' => 18,
             'duncan3dc\\Sonos\\' => 16,
-            'duncan3dc\\SonosTests\\' => 21,
+            'duncan3dc\\Log\\' => 14,
+            'duncan3dc\\LogTests\\' => 19,
             'duncan3dc\\DomParser\\' => 20,
             'duncan3dc\\DomParserTests\\' => 25,
+            'duncan3dc\\Cache\\' => 16,
         ),
         'S' => 
         array (
@@ -32,7 +35,10 @@ class ComposerStaticInitb131b39c3e439adf68e754ff7761fe23
         ),
         'P' => 
         array (
+            'Psr\\SimpleCache\\' => 16,
+            'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
+            'Psr\\Cache\\' => 10,
         ),
         'L' => 
         array (
@@ -70,9 +76,13 @@ class ComposerStaticInitb131b39c3e439adf68e754ff7761fe23
         array (
             0 => __DIR__ . '/..' . '/duncan3dc/sonos/src',
         ),
-        'duncan3dc\\SonosTests\\' => 
+        'duncan3dc\\Log\\' => 
         array (
-            0 => __DIR__ . '/..' . '/duncan3dc/sonos/tests',
+            0 => __DIR__ . '/..' . '/duncan3dc/logger-aware-trait/src',
+        ),
+        'duncan3dc\\LogTests\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/duncan3dc/logger-aware-trait/tests',
         ),
         'duncan3dc\\DomParser\\' => 
         array (
@@ -82,6 +92,10 @@ class ComposerStaticInitb131b39c3e439adf68e754ff7761fe23
         array (
             0 => __DIR__ . '/..' . '/duncan3dc/domparser/tests',
         ),
+        'duncan3dc\\Cache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/duncan3dc/cache/src',
+        ),
         'Symfony\\Component\\Process\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/process',
@@ -90,9 +104,21 @@ class ComposerStaticInitb131b39c3e439adf68e754ff7761fe23
         array (
             0 => __DIR__ . '/..' . '/robgridley/flysystem-smb/src',
         ),
+        'Psr\\SimpleCache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/simple-cache/src',
+        ),
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+        ),
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'Psr\\Cache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/cache/src',
         ),
         'League\\Flysystem\\' => 
         array (
@@ -132,22 +158,11 @@ class ComposerStaticInitb131b39c3e439adf68e754ff7761fe23
         ),
     );
 
-    public static $prefixesPsr0 = array (
-        'P' => 
-        array (
-            'Psr\\Log\\' => 
-            array (
-                0 => __DIR__ . '/..' . '/psr/log',
-            ),
-        ),
-    );
-
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInitb131b39c3e439adf68e754ff7761fe23::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInitb131b39c3e439adf68e754ff7761fe23::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInitb131b39c3e439adf68e754ff7761fe23::$prefixesPsr0;
 
         }, null, ClassLoader::class);
     }
